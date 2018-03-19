@@ -20,7 +20,7 @@ endif	# TARGET_OS
 ifeq ($(TARGET_OS), $(filter $(TARGET_OS),linux32 linux64 linux-armhf))
 	EXE_SUFFIX =
 	OSFLAG = -D LINUX
-else ifeq ($(shell uname), Darwin)
+else ifeq ($(TARGET_OS), osx)
 	EXE_SUFFIX =
 	OSFLAG = -D MAC_OS
 else
