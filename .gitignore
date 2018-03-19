@@ -1,3 +1,5 @@
 dist
 avrdude
-avr-dummy
+avr-dummy-*
+*.tar.gz
+*.zip

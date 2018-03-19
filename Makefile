@@ -31,7 +31,25 @@ endif
 VERSION ?= $(shell git describe --always)
 TARGET= avrdude
 
-DIST_DIR:=avr-dummy
+# OS-specific settings and build flags
+ifeq ($(TARGET_OS), win32)
+	ARCHIVE ?= zip
+else
+	ARCHIVE ?= tar
+endif
+
+# Packaging into archive (for 'dist' target)
+ifeq ($(ARCHIVE), zip)
+	ARCHIVE_CMD := zip -r
+	ARCHIVE_EXTENSION ?= zip
+else ifeq ($(ARCHIVE), tar)
+	ARCHIVE_CMD := tar czf
+	ARCHIVE_EXTENSION ?= tar.gz
+endif
+
+DIST_NAME := avr-dummy-$(VERSION)-$(TARGET_OS)
+DIST_DIR := $(DIST_NAME)
+DIST_ARCHIVE := $(DIST_NAME).$(ARCHIVE_EXTENSION)
 
 ifeq ($(TARGET_OS), osx)
 CC=clang++
@@ -45,6 +63,8 @@ all: $(TARGET)
 dist: $(TARGET) $(DIST_DIR)
 	@echo Copying avrdude to dist folder: $@...
 	cp $(TARGET)$(EXE_SUFFIX) $(DIST_DIR)/
+	cp micronucleus-*/micronucleus* $(DIST_DIR)/ || :
+	$(ARCHIVE_CMD) $(DIST_ARCHIVE) $(DIST_DIR)
 	
 $(TARGET): $(SOURCE)
 	@echo Building avrdude: $@...
@@ -59,5 +79,6 @@ clean:
 	@rm -f *.o
 	@rm -f $(TARGET)$(EXE_SUFFIX)
 	@rm -rf $(DIST_DIR)
-
+	@rm -f $(DIST_ARCHIVE)
+	
 .PHONY:	all clean dist
