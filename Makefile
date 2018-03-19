@@ -33,7 +33,11 @@ TARGET= avrdude
 
 DIST_DIR:=avr-dummy
 
-CC=	g++
+ifeq ($(TARGET_OS), osx)
+CC=clang++
+else
+CC=g++
+endif
 SOURCE= avrdude-dummy.cpp
 
 all: $(TARGET)
