@@ -58,11 +58,11 @@ script:
 - |
   if [ $TARGET_OS = "win32" ]; then
     unzip micronucleus-${mVER}-${TARGET_OS}${ARCHIVE}
-    cp micronucleus.exe avr-dummy/
+    cp micronucleus-${mVER}-${TARGET_OS}/micronucleus.exe avr-dummy/
     zip -r avr-dummy-${VER}-${TARGET_OS}${ARCHIVE} avr-dummy/
   else
     tar -xvf micronucleus-${mVER}-${TARGET_OS}${ARCHIVE}
-    cp micronucleus avr-dummy/
+    cp micronucleus-${mVER}-${TARGET_OS}/micronucleus avr-dummy/
     tar czf avr-dummy-${VER}-${TARGET_OS}${ARCHIVE} avr-dummy/
   fi
 
