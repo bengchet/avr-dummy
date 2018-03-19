@@ -23,6 +23,8 @@ ifeq ($(TARGET_OS), $(filter $(TARGET_OS),linux32 linux64 linux-armhf))
 else ifeq ($(TARGET_OS), osx)
 	EXE_SUFFIX =
 	OSFLAG = -D MAC_OS
+	OSFLAG += -mmacosx-version-min=10.6
+	OSFLAG += -arch x86_64 -arch i386
 else
 	EXE_SUFFIX = .exe
 	OSFLAG = -D WIN -static-libstdc++ -static-libgcc
@@ -52,7 +54,7 @@ DIST_DIR := $(DIST_NAME)
 DIST_ARCHIVE := $(DIST_NAME).$(ARCHIVE_EXTENSION)
 
 ifeq ($(TARGET_OS), osx)
-CC=clang++
+CC=c++
 else
 CC=g++
 endif
@@ -80,5 +82,6 @@ clean:
 	@rm -f $(TARGET)$(EXE_SUFFIX)
 	@rm -rf $(DIST_DIR)
 	@rm -f $(DIST_ARCHIVE)
+	@rm -rf avr-dummy-*
 	
 .PHONY:	all clean dist
