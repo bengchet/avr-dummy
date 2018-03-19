@@ -1,0 +1,89 @@
+language: c
+
+sudo: required
+
+services:
+- docker
+
+matrix:
+  include:
+  - env:
+    - TARGET_OS=linux64
+    - DOCKER_IMAGE=multiarch/crossbuild
+    - CROSS_TRIPLE=x86_64-linux-gnu
+    - BUILD_DIR=/workdir
+    - ARCHIVE=.tar.gz
+  - env:
+    - TARGET_OS=linux32
+    - DOCKER_IMAGE=dockcross/linux-x86
+    - CROSS_TRIPLE=i686-linux-gnu
+    - BUILD_DIR=/work
+    - ARCHIVE=.tar.gz
+  - env:
+    - TARGET_OS=linux-armhf
+    - DOCKER_IMAGE=multiarch/crossbuild
+    - CROSS_TRIPLE=arm-linux-gnueabihf
+    - BUILD_DIR=/workdir
+    - ARCHIVE=.tar.gz
+  - env:
+    - TARGET_OS=win32
+    - DOCKER_IMAGE=multiarch/crossbuild
+    - CROSS_TRIPLE=i686-w64-mingw32
+    - BUILD_DIR=/workdir
+    - ARCHIVE=.zip
+  - env:
+    - TARGET_OS=osx
+    - DOCKER_IMAGE=multiarch/crossbuild
+    - CROSS_TRIPLE=x86_64-apple-darwin
+    - BUILD_DIR=/workdir
+    - ARCHIVE=.tar.gz
+
+script:
+- export VER=`git describe --always`
+- export mVER=2.0.3
+- echo ${VER}
+
+  # run docker containers for multiple images
+- >-
+  docker run --rm
+  -v ${PWD}:${BUILD_DIR}
+  -e TARGET_OS=${TARGET_OS}
+  -e CROSS_TRIPLE=${CROSS_TRIPLE}
+  ${EXTRA_ARGS}
+  ${DOCKER_IMAGE}
+  make clean dist
+
+  # we import together with micronucleus
+- wget -q -O micronucleus-${mVER}-${TARGET_OS}${ARCHIVE} https://github.com/bengchet/micronucleus/releases/download/${mVER}/micronucleus-${mVER}-${TARGET_OS}${ARCHIVE}
+- |
+  if [ $TARGET_OS = "win32" ]; then
+    unzip micronucleus-${mVER}-${TARGET_OS}${ARCHIVE}
+    cp micronucleus.exe avr-dummy/
+    zip -r avr-dummy-${VER}-${TARGET_OS}${ARCHIVE} avr-dummy/
+  else
+    tar -xvf micronucleus-${mVER}-${TARGET_OS}${ARCHIVE}
+    cp micronucleus avr-dummy/
+    tar czf avr-dummy-${VER}-${TARGET_OS}${ARCHIVE} avr-dummy/
+  fi
+
+  # list, check files
+- ls
+- export DIST_NAME=$(ls -1 avr-dummy-${VER}-${TARGET_OS}.*)
+- echo $DIST_NAME
+- DIST_SIZE=$(wc -c <${DIST_NAME} 2>/dev/null | tr -d ' ')
+- echo $DIST_SIZE
+- DIST_SHA256=$(shasum -a 256 ${DIST_NAME} | cut -d ' ' -f1)
+- echo $DIST_SHA256
+- echo ${DIST_NAME} ${DIST_SIZE} ${DIST_SHA256} >avr-dummy-${VER}-${TARGET_OS}.sha256.txt
+- cat avr-dummy-${VER}-${TARGET_OS}.sha256.txt
+
+deploy:
+  provider: releases
+  skip_cleanup: true
+  file_glob: true
+  api_key:
+    secure: UUiE8YC/aca5XG1ewKTCCLRy90ZZEFAfJWvm4iOo3jAdZC0ecYrPS1NkbtqwK73W+UpMnLIrQw52kUSrnfRbC5ukauS4esMXhfbnKenzTnoIGS2C8ZO2QHGfSVypT8UmDgDk74w+cP+Q4emPOfShlsUaXk+zVvi0wWt9x8jWVNNItUYbUXVYNuhmIjz+F9Jr41wWyujdVf+cmVZlM/fkV+78JuTADfzYXbR/W89oOPaTB6Inu/+KjT96Vz4VVZdisPgYJ9rJR9SwBSbk6Tn37amFIf0kqtQanju456aKnerviZ8kBRvimKZxN0uAYvnvAv57u9E3d1IbXuYrT8nBBq5VilUGWd8aPhIKjGdHMlqQM7O1LMrgNf5JfnewmClMTtxwzceYKs8fChAjzr+9sXnUuK04RELHFo+uZZf40GM79btWuEaegxJpnzWJLa9/r+hSfvgDimnnNy1YTU1psTUdYN03cJKeVR22rsyUBUrXxnbvfgU+UkI40FhTxVU3+aETYiSiuekOsTuRZhxtvyconId0dOiNU5J0QBQ80HlbAqbGDmHitiQsx4fzP7Vr1Pil6gglsVuLMcUlzFo4lkPmkDI54PLvodTczHOGbw/s/LJ0P0ns8bPkVBNv99S5W3yZpT/+jVG0EOvQuiPZBz80TzBh+OTigZSyOPgCIFs=
+  file: avr-dummy-$TRAVIS_TAG-$TARGET_OS.*
+  on:
+    repo: bengchet/avr-dummy
+    tags: true
