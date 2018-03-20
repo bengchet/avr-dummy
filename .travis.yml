@@ -66,7 +66,7 @@ script:
   fi
   
   # list, check files
-- ls
+- file avr-dummy-${VER}-${TARGET_OS}/*
 - export DIST_NAME=$(ls -1 avr-dummy-${VER}-${TARGET_OS}.*)
 - echo $DIST_NAME
 - DIST_SIZE=$(wc -c <${DIST_NAME} 2>/dev/null | tr -d ' ')
