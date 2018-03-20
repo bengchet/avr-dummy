@@ -54,10 +54,9 @@ DIST_DIR := $(DIST_NAME)
 DIST_ARCHIVE := $(DIST_NAME).$(ARCHIVE_EXTENSION)
 
 ifeq ($(TARGET_OS), osx)
-CC=c++
-else
-CC=g++
+CXX=c++
 endif
+
 SOURCE= avrdude-dummy.cpp
 
 all: $(TARGET)
@@ -70,7 +69,7 @@ dist: $(TARGET) $(DIST_DIR)
 	
 $(TARGET): $(SOURCE)
 	@echo Building avrdude: $@...
-	$(CC) $(OSFLAG) -o $@$(EXE_SUFFIX) $^
+	$(CXX) $(OSFLAG) -o $@$(EXE_SUFFIX) $^
 	strip $@$(EXE_SUFFIX) 2>/dev/null \
 	|| $(CROSS_TRIPLE)-strip $@$(EXE_SUFFIX)
 
